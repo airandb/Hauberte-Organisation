@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Urlaubshaus Verwaltung</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- FullCalendar CSS -->
+    <link href="https://unpkg.com/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+
+    <script>
+        // Einfacher Passwortschutz
+        function checkPassword() {
+            const password = prompt("Bitte Passwort eingeben:");
+            if (password !== "leslousarrivent") {
+                alert("Falsches Passwort! Zugriff verweigert.");
+                document.body.innerHTML = "<h1>Zugriff verweigert</h1>";
+            }
+        }
+        window.onload = checkPassword;
+    </script>
+</head>
+
+<body>
+    <h1>Urlaubsplanung für unser Haus</h1>
+
+    <h2>Neuen Urlaub eintragen</h2>
+    <form id="urlaubForm">
+        Name: <input type="text" id="name" required><br>
+        Von: <input type="date" id="von" required><br>
+        Bis: <input type="date" id="bis" required><br>
+        <button type="submit">Eintragen</button>
+    </form>
+
+    <h2>Kalenderansicht</h2>
+    <div id="calendar"></div>
+
+    <h2>Haus-Infos</h2>
+    <p>WLAN: Passwort1234</p>
+    <p>Hausordnung: Keine Partys nach 22 Uhr.</p>
+
+    <!-- FullCalendar JS -->
+    <script src="https://unpkg.com/fullcalendar@6.1.8/main.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
