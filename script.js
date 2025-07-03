@@ -2,8 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        plugins: [ FullCalendar.DayGrid ],
-        initialView: 'dayGridMonth',
+        initialView: 'dayGridMonth',  // ohne plugins
         events: []
     });
 
@@ -25,4 +24,3 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('urlaubForm').reset();
     });
 });
-
