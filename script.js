@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const calendarEl = document.getElementById('calendar');
+    var calendarEl = document.getElementById('calendar');
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        plugins: [ FullCalendar.DayGridPlugin ],
         initialView: 'dayGridMonth',
-        locale: 'de',
-        plugins: [FullCalendar.dayGridPlugin]
+        events: []
     });
 
     calendar.render();
@@ -16,15 +16,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const von = document.getElementById('von').value;
         const bis = document.getElementById('bis').value;
 
-        if (name && von && bis) {
-            calendar.addEvent({
-                title: name,
-                start: von,
-                end: bis,
-                allDay: true
-            });
+        calendar.addEvent({
+            title: name,
+            start: von,
+            end: bis
+        });
 
-            this.reset();
-        }
+        document.getElementById('urlaubForm').reset();
     });
 });
+
