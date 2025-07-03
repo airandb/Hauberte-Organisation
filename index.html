@@ -2,13 +2,9 @@
 <html lang="de">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Urlaubshaus Verwaltung</title>
-    <link rel="stylesheet" href="style.css">
-
-    <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" crossorigin="anonymous" />
-
+    <link rel="stylesheet" href="style.css" />
     <script>
         // Einfacher Passwortschutz
         function checkPassword() {
@@ -27,9 +23,9 @@
 
     <h2>Neuen Urlaub eintragen</h2>
     <form id="urlaubForm">
-        Name: <input type="text" id="name" required><br>
-        Von: <input type="date" id="von" required><br>
-        Bis: <input type="date" id="bis" required><br>
+        Name: <input type="text" id="name" required /><br />
+        Von: <input type="date" id="von" required /><br />
+        Bis: <input type="date" id="bis" required /><br />
         <button type="submit">Eintragen</button>
     </form>
 
@@ -40,8 +36,9 @@
     <p>WLAN: Passwort1234</p>
     <p>Hausordnung: Keine Partys nach 22 Uhr.</p>
 
-    <!-- FullCalendar JS -->
-   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js" crossorigin="anonymous"></script>
+    <!-- FullCalendar lokal -->
+    <script src="libs/core/index.global.min.js"></script>
+    <script src="libs/daygrid/index.global.min.js"></script>
     <script src="script.js"></script>
 </body>
 
