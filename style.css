@@ -1,24 +1,88 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f0f8ff;
+    margin: 0;
+    padding: 20px;
+    
+    /* Hintergrundfoto hinzufügen */
+    background-image: url('images/photo.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    
+    /* Overlay für bessere Lesbarkeit */
+    position: relative;
 }
 
-h1,
-h2 {
+/* Overlay für bessere Lesbarkeit des Textes */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: -1;
+}
+
+h1, h2 {
     color: #2a4d69;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-form input,
-form button {
+/* Formular-Container für bessere Sichtbarkeit */
+form {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+form input, form button {
     margin: 5px 0;
-    padding: 5px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+form button {
+    background-color: #2a4d69;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+form button:hover {
+    background-color: #1a3a52;
 }
 
 #calendar {
     max-width: 900px;
     margin: 40px auto;
-    background-color: #ffffff;
-    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 15px;
     border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Haus-Infos Container */
+.haus-infos {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Alternative: Gradient-Overlay statt einfarbiges Overlay */
+.gradient-overlay body::before {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(240, 248, 255, 0.8) 50%,
+        rgba(255, 255, 255, 0.9) 100%
+    );
 }
