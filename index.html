@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
     <meta charset="UTF-8" />
     <title>Urlaubshaus Verwaltung</title>
@@ -17,10 +16,17 @@
         window.onload = checkPassword;
     </script>
 </head>
-
 <body>
     <h1>Urlaubsplanung für unser Haus</h1>
-
+    
+    <div class="help-text">
+        <h3>📋 Bedienungshinweise</h3>
+        <p>• Neuen Termin eintragen: Formular ausfüllen und "Eintragen" klicken</p>
+        <p>• Termin bearbeiten: Auf den Termin im Kalender klicken → "OK" für Bearbeiten</p>
+        <p>• Termin löschen: Auf den Termin im Kalender klicken → "Abbrechen" für Löschen</p>
+        <p>• Bei Überschneidungen wird automatisch gewarnt</p>
+    </div>
+    
     <h2>Neuen Urlaub eintragen</h2>
     <form id="urlaubForm">
         Name: <input type="text" id="name" required /><br />
@@ -28,21 +34,22 @@
         Bis: <input type="date" id="bis" required /><br />
         <button type="submit">Eintragen</button>
     </form>
-
+    
     <h2>Kalenderansicht</h2>
     <div id="calendar"></div>
-
+    
     <h2>Haus-Infos</h2>
-    <p>Hauberte Codes:</p>
-    <p>Barrière Verte: 1966</p>
-    </p>Cles Portails (Box vor dem Portail du bas): 2611</p>
-    </p>Cles de la Maison (Box au Portail du bas): 2024</p>
-    </p>Cles Citerne/Cave (Box im Poolklo): 2011</p>
-
+    <div class="haus-infos">
+        <p>Hauberte Codes:</p>
+        <p>Barrière Verte: 1966</p>
+        </p>Cles Portails (Box vor dem Portail du bas): 2611</p>
+        </p>Cles de la Maison (Box au Portail du bas): 2024</p>
+        </p>Cles Citerne/Cave (Box im Poolklo): 2011</p>
+    </div>
+    
     <!-- FullCalendar lokal -->
     <script src="libs/core/index.global.min.js"></script>
     <script src="libs/daygrid/index.global.min.js"></script>
     <script src="script.js"></script>
 </body>
-
 </html>
