@@ -1,315 +1,267 @@
-document.addEventListener('DOMContentLoaded', function () {
-    // GitHub-Konfiguration (ANPASSEN!)
-    const GITHUB_CONFIG = {
-        owner: 'IHR-GITHUB-USERNAME',  // Ihr GitHub-Benutzername
-        repo: 'IHR-REPOSITORY-NAME',   // Name Ihres Repositories
-        token: 'IHR-GITHUB-TOKEN',     // Personal Access Token
-        fileName: 'termine.json'       // Dateiname für Termine
-    };
+// GitHub-Konfiguration
+let githubConfig = {
+    token: '',
+    repo: '',
+    branch: 'main',
+    filename: 'termine.json'
+};
+
+// Kalender-Instanz
+let calendar;
+
+// Termine-Array
+let termine = [];
+
+// Status-Nachricht anzeigen
+function showStatus(message, isError = false) {
+    const statusDiv = document.getElementById('status-message');
+    statusDiv.innerHTML = `<div class="status-message ${isError ? 'status-error' : 'status-success'}">${message}</div>`;
+    setTimeout(() => {
+        statusDiv.innerHTML = '';
+    }, 5000);
+}
+
+// GitHub-Konfiguration speichern
+function saveGitHubConfig() {
+    const token = document.getElementById('github-token').value;
+    const repo = document.getElementById('github-repo').value;
     
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'de',
-        events: [],
-        
-        // Event-Klicks aktivieren
-        eventClick: function(info) {
-            const action = confirm(`Termin "${info.event.title}" bearbeiten?\n\nOK = Bearbeiten\nAbbrechen = Löschen`);
-            
-            if (action) {
-                editEvent(info.event);
-            } else {
-                if (confirm(`Termin "${info.event.title}" wirklich löschen?`)) {
-                    deleteEvent(info.event);
-                }
-            }
-        },
-        
-        eventMouseEnter: function(info) {
-            info.el.title = `${info.event.title} (Klicken zum Bearbeiten/Löschen)`;
-        }
-    });
-    
-    // Termine beim Start laden
-    loadEventsFromGitHub();
-    calendar.render();
-    
-    // Formular für neuen Termin
-    document.getElementById('urlaubForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        
-        const name = document.getElementById('name').value;
-        const von = document.getElementById('von').value;
-        const bis = document.getElementById('bis').value;
-        
-        // Überschneidungsprüfung
-        const events = calendar.getEvents();
-        const newStart = new Date(von);
-        const newEnd = new Date(bis);
-        
-        for (let event of events) {
-            const eventStart = new Date(event.start);
-            const eventEnd = new Date(event.end);
-            
-            if ((newStart < eventEnd && newEnd > eventStart)) {
-                if (!confirm(`Überschneidung mit "${event.title}" festgestellt!\nTrotzdem eintragen?`)) {
-                    return;
-                }
-            }
-        }
-        
-        // Neuen Termin hinzufügen
-        const newEvent = {
-            id: 'event_' + Date.now(),
-            title: name,
-            start: von,
-            end: bis,
-            backgroundColor: getRandomColor(),
-            created: new Date().toISOString(),
-            createdBy: 'Nutzer-' + Math.floor(Math.random() * 1000)
-        };
-        
-        addEventToGitHub(newEvent);
-        document.getElementById('urlaubForm').reset();
-    });
-    
-    // Termine von GitHub laden
-    async function loadEventsFromGitHub() {
-        try {
-            showMessage('Termine werden geladen...', 'info');
-            
-            const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.fileName}`, {
-                headers: {
-                    'Authorization': `token ${GITHUB_CONFIG.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                const content = JSON.parse(atob(data.content));
-                
-                // Termine in Kalender laden
-                content.forEach(event => {
-                    calendar.addEvent(event);
-                });
-                
-                showMessage(`${content.length} Termine geladen`, 'success');
-            } else if (response.status === 404) {
-                // Datei existiert noch nicht - erstellen
-                await saveEventsToGitHub([]);
-                showMessage('Neue Termindatei erstellt', 'success');
-            } else {
-                throw new Error('Fehler beim Laden der Termine');
-            }
-        } catch (error) {
-            console.error('Fehler beim Laden:', error);
-            showMessage('Fehler beim Laden der Termine. Lokale Speicherung wird verwendet.', 'error');
-            loadEventsFromLocalStorage();
-        }
+    if (!token || !repo) {
+        showStatus('Bitte Token und Repository eingeben!', true);
+        return;
     }
     
-    // Termin zu GitHub hinzufügen
-    async function addEventToGitHub(newEvent) {
-        try {
-            showMessage('Termin wird gespeichert...', 'info');
-            
-            // Aktuelle Termine laden
-            const currentEvents = await getCurrentEventsFromGitHub();
-            currentEvents.push(newEvent);
-            
-            // Speichern
-            await saveEventsToGitHub(currentEvents);
-            
-            // In Kalender hinzufügen
-            calendar.addEvent(newEvent);
-            showMessage('Termin hinzugefügt und gespeichert!', 'success');
-            
-        } catch (error) {
-            console.error('Fehler beim Speichern:', error);
-            showMessage('Fehler beim Speichern. Termin nur lokal hinzugefügt.', 'error');
-            calendar.addEvent(newEvent);
-        }
+    githubConfig.token = token;
+    githubConfig.repo = repo;
+    
+    // Konfiguration im localStorage speichern
+    localStorage.setItem('githubConfig', JSON.stringify(githubConfig));
+    
+    showStatus('GitHub-Konfiguration gespeichert!');
+    
+    // Termine laden
+    loadTermineFromGitHub();
+}
+
+// Konfiguration laden
+function loadGitHubConfig() {
+    const saved = localStorage.getItem('githubConfig');
+    if (saved) {
+        githubConfig = JSON.parse(saved);
+        document.getElementById('github-token').value = githubConfig.token;
+        document.getElementById('github-repo').value = githubConfig.repo;
+    }
+}
+
+// Kalender aktualisieren
+function updateCalendar() {
+    if (calendar) {
+        calendar.removeAllEvents();
+        calendar.addEventSource(termine);
+    }
+}
+// Termine von GitHub laden
+async function loadTermineFromGitHub() {
+    if (!githubConfig.token || !githubConfig.repo) {
+        showStatus('GitHub-Konfiguration fehlt!', true);
+        return;
     }
     
-    // Termin löschen
-    async function deleteEvent(event) {
-        try {
-            showMessage('Termin wird gelöscht...', 'info');
-            
-            // Aktuelle Termine laden
-            const currentEvents = await getCurrentEventsFromGitHub();
-            const filteredEvents = currentEvents.filter(e => e.id !== event.id);
-            
-            // Speichern
-            await saveEventsToGitHub(filteredEvents);
-            
-            // Aus Kalender entfernen
-            event.remove();
-            showMessage('Termin gelöscht!', 'success');
-            
-        } catch (error) {
-            console.error('Fehler beim Löschen:', error);
-            showMessage('Fehler beim Löschen. Nur lokal entfernt.', 'error');
-            event.remove();
-        }
-    }
-    
-    // Termin bearbeiten
-    async function editEvent(event) {
-        const newTitle = prompt('Neuer Name:', event.title);
-        if (newTitle === null) return;
-        
-        const newStart = prompt('Neues Startdatum (YYYY-MM-DD):', event.start.toISOString().split('T')[0]);
-        if (newStart === null) return;
-        
-        const newEnd = prompt('Neues Enddatum (YYYY-MM-DD):', event.end.toISOString().split('T')[0]);
-        if (newEnd === null) return;
-        
-        if (new Date(newStart) >= new Date(newEnd)) {
-            alert('Startdatum muss vor Enddatum liegen!');
-            return;
-        }
-        
-        try {
-            showMessage('Termin wird aktualisiert...', 'info');
-            
-            // Aktuelle Termine laden
-            const currentEvents = await getCurrentEventsFromGitHub();
-            const eventIndex = currentEvents.findIndex(e => e.id === event.id);
-            
-            if (eventIndex !== -1) {
-                currentEvents[eventIndex] = {
-                    ...currentEvents[eventIndex],
-                    title: newTitle,
-                    start: newStart,
-                    end: newEnd,
-                    modified: new Date().toISOString()
-                };
-                
-                // Speichern
-                await saveEventsToGitHub(currentEvents);
-                
-                // Kalender aktualisieren
-                event.setProp('title', newTitle);
-                event.setStart(newStart);
-                event.setEnd(newEnd);
-                
-                showMessage('Termin bearbeitet!', 'success');
-            }
-            
-        } catch (error) {
-            console.error('Fehler beim Bearbeiten:', error);
-            showMessage('Fehler beim Speichern. Nur lokal bearbeitet.', 'error');
-            event.setProp('title', newTitle);
-            event.setStart(newStart);
-            event.setEnd(newEnd);
-        }
-    }
-    
-    // Aktuelle Termine von GitHub abrufen
-    async function getCurrentEventsFromGitHub() {
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.fileName}`, {
+    try {
+        const response = await fetch(`https://api.github.com/repos/${githubConfig.repo}/contents/${githubConfig.filename}?ref=${githubConfig.branch}`, {
             headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Authorization': `token ${githubConfig.token}`,
                 'Accept': 'application/vnd.github.v3+json'
             }
         });
         
         if (response.ok) {
             const data = await response.json();
-            return JSON.parse(atob(data.content));
+            const content = atob(data.content);
+            termine = JSON.parse(content);
+            showStatus('Termine erfolgreich geladen!');
+        } else if (response.status === 404) {
+            termine = [];
+            showStatus('Neue Termine-Datei wird erstellt...');
+        } else {
+            throw new Error(`HTTP ${response.status}`);
         }
-        return [];
+    } catch (error) {
+        console.error('Fehler beim Laden:', error);
+        showStatus('Fehler beim Laden der Termine!', true);
+        termine = [];
     }
     
-    // Termine zu GitHub speichern
-    async function saveEventsToGitHub(events) {
-        // Aktuelle Datei-Info für SHA abrufen
-        const currentFile = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.fileName}`, {
-            headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
-                'Accept': 'application/vnd.github.v3+json'
+    updateCalendar();
+}
+
+// Termine auf GitHub speichern
+async function saveTermineToGitHub() {
+    if (!githubConfig.token || !githubConfig.repo) {
+        showStatus('GitHub-Konfiguration fehlt!', true);
+        return;
+    }
+    
+    try {
+        // Erst prüfen, ob Datei existiert
+        let sha = null;
+        try {
+            const response = await fetch(`https://api.github.com/repos/${githubConfig.repo}/contents/${githubConfig.filename}?ref=${githubConfig.branch}`, {
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                sha = data.sha;
             }
-        });
-        
-        const content = btoa(JSON.stringify(events, null, 2));
-        const body = {
-            message: `Termine aktualisiert: ${new Date().toLocaleString('de-DE')}`,
-            content: content
-        };
-        
-        if (currentFile.ok) {
-            const fileData = await currentFile.json();
-            body.sha = fileData.sha;
+        } catch (error) {
+            // Datei existiert nicht - das ist OK
         }
         
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.fileName}`, {
+        // Datei erstellen oder aktualisieren
+        const content = btoa(JSON.stringify(termine, null, 2));
+        const body = {
+            message: `Termine aktualisiert am ${new Date().toLocaleString('de-DE')}`,
+            content: content,
+            branch: githubConfig.branch
+        };
+        
+        if (sha) {
+            body.sha = sha;
+        }
+        
+        const response = await fetch(`https://api.github.com/repos/${githubConfig.repo}/contents/${githubConfig.filename}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Authorization': `token ${githubConfig.token}`,
                 'Accept': 'application/vnd.github.v3+json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(body)
         });
         
-        if (!response.ok) {
-            throw new Error('Fehler beim Speichern zu GitHub');
+        if (response.ok) {
+            showStatus('Termine erfolgreich gespeichert!');
+        } else {
+            throw new Error(`HTTP ${response.status}`);
         }
+    } catch (error) {
+        console.error('Fehler beim Speichern:', error);
+        showStatus('Fehler beim Speichern der Termine!', true);
     }
-    
-    // Fallback: Lokale Speicherung
-    function loadEventsFromLocalStorage() {
-        const events = JSON.parse(localStorage.getItem('urlaubsTermine') || '[]');
-        events.forEach(event => {
-            calendar.addEvent(event);
-        });
-    }
-    
-    // Hilfsfunktionen
-    function getRandomColor() {
-        const colors = ['#3788d8', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14'];
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
-    
-    function showMessage(message, type) {
-        const existingMsg = document.getElementById('message');
-        if (existingMsg) existingMsg.remove();
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.id = 'message';
-        messageDiv.className = `message ${type}`;
-        messageDiv.textContent = message;
-        
-        document.body.insertBefore(messageDiv, document.body.firstChild);
-        
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 3000);
-    }
-    
-    // Sync-Button
-    window.syncTermine = async function() {
-        showMessage('Synchronisiere Termine...', 'info');
-        calendar.removeAllEvents();
-        await loadEventsFromGitHub();
+}
+
+// Termine synchronisieren
+async function syncTermine() {
+    await loadTermineFromGitHub();
+}
+// Neuen Termin hinzufügen
+function addTermin(name, von, bis) {
+    const id = Date.now().toString();
+    const termin = {
+        id: id,
+        title: name,
+        start: von,
+        end: new Date(new Date(bis).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        backgroundColor: '#3498db',
+        borderColor: '#2980b9'
     };
     
-    // Automatische Synchronisation alle 30 Sekunden
-    setInterval(async () => {
-        try {
-            const currentEvents = await getCurrentEventsFromGitHub();
-            const calendarEvents = calendar.getEvents();
-            
-            if (currentEvents.length !== calendarEvents.length) {
-                calendar.removeAllEvents();
-                currentEvents.forEach(event => calendar.addEvent(event));
-                showMessage('Termine automatisch synchronisiert', 'success');
-            }
-        } catch (error) {
-            console.log('Automatische Sync fehlgeschlagen:', error);
+    termine.push(termin);
+    updateCalendar();
+    saveTermineToGitHub();
+}
+
+// Termin bearbeiten
+function editTermin(termin) {
+    const newName = prompt("Name ändern:", termin.title);
+    const newVon = prompt("Von-Datum ändern (YYYY-MM-DD):", termin.start);
+    const newBis = prompt("Bis-Datum ändern (YYYY-MM-DD):", new Date(new Date(termin.end).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    
+    if (newName && newVon && newBis) {
+        const index = termine.findIndex(t => t.id === termin.id);
+        if (index !== -1) {
+            termine[index].title = newName;
+            termine[index].start = newVon;
+            termine[index].end = new Date(new Date(newBis).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            updateCalendar();
+            saveTermineToGitHub();
         }
-    }, 30000);
+    }
+}
+
+// Termin löschen
+function deleteTermin(termin) {
+    const index = termine.findIndex(t => t.id === termin.id);
+    if (index !== -1) {
+        termine.splice(index, 1);
+        updateCalendar();
+        saveTermineToGitHub();
+    }
+}
+
+// Initialisierung
+document.addEventListener('DOMContentLoaded', function() {
+    // GitHub-Konfiguration laden
+    loadGitHubConfig();
+    
+    // Kalender initialisieren
+    const calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'de',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,listMonth'
+        },
+        buttonText: {
+            today: 'Heute',
+            month: 'Monat',
+            list: 'Liste'
+        },
+        eventClick: function(info) {
+            const action = confirm("OK = Bearbeiten, Abbrechen = Löschen");
+            if (action) {
+                editTermin(info.event);
+            } else {
+                if (confirm("Termin wirklich löschen?")) {
+                    deleteTermin(info.event);
+                }
+            }
+        },
+        eventDisplay: 'block',
+        height: 'auto'
+    });
+    
+    calendar.render();
+    
+    // Formular-Event-Listener
+    document.getElementById('urlaubForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const von = document.getElementById('von').value;
+        const bis = document.getElementById('bis').value;
+        
+        if (name && von && bis) {
+            addTermin(name, von, bis);
+            
+            // Formular zurücksetzen
+            document.getElementById('name').value = '';
+            document.getElementById('von').value = '';
+            document.getElementById('bis').value = '';
+        }
+    });
+    
+    // Termine initial laden
+    if (githubConfig.token && githubConfig.repo) {
+        loadTermineFromGitHub();
+    }
+    
+    // Automatische Synchronisation alle 30 Sekunden
+    setInterval(syncTermine, 30000);
 });
