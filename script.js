@@ -1,7 +1,7 @@
-// GitHub-Konfiguration
+// GitHub-Konfiguration - FEST HINTERLEGT
 let githubConfig = {
-    token: '',
-    repo: '',
+    token: 'IHR_GITHUB_TOKEN_HIER',  // ← Hier Ihren GitHub Token eintragen
+    repo: 'IHR_BENUTZERNAME/IHR_REPO_NAME',  // ← Hier Ihr Repository eintragen
     branch: 'main',
     filename: 'termine.json'
 };
@@ -21,38 +21,6 @@ function showStatus(message, isError = false) {
     }, 5000);
 }
 
-// GitHub-Konfiguration speichern
-function saveGitHubConfig() {
-    const token = document.getElementById('github-token').value;
-    const repo = document.getElementById('github-repo').value;
-    
-    if (!token || !repo) {
-        showStatus('Bitte Token und Repository eingeben!', true);
-        return;
-    }
-    
-    githubConfig.token = token;
-    githubConfig.repo = repo;
-    
-    // Konfiguration im localStorage speichern
-    localStorage.setItem('githubConfig', JSON.stringify(githubConfig));
-    
-    showStatus('GitHub-Konfiguration gespeichert!');
-    
-    // Termine laden
-    loadTermineFromGitHub();
-}
-
-// Konfiguration laden
-function loadGitHubConfig() {
-    const saved = localStorage.getItem('githubConfig');
-    if (saved) {
-        githubConfig = JSON.parse(saved);
-        document.getElementById('github-token').value = githubConfig.token;
-        document.getElementById('github-repo').value = githubConfig.repo;
-    }
-}
-
 // Kalender aktualisieren
 function updateCalendar() {
     if (calendar) {
@@ -60,13 +28,9 @@ function updateCalendar() {
         calendar.addEventSource(termine);
     }
 }
+
 // Termine von GitHub laden
 async function loadTermineFromGitHub() {
-    if (!githubConfig.token || !githubConfig.repo) {
-        showStatus('GitHub-Konfiguration fehlt!', true);
-        return;
-    }
-    
     try {
         const response = await fetch(`https://api.github.com/repos/${githubConfig.repo}/contents/${githubConfig.filename}?ref=${githubConfig.branch}`, {
             headers: {
@@ -97,11 +61,6 @@ async function loadTermineFromGitHub() {
 
 // Termine auf GitHub speichern
 async function saveTermineToGitHub() {
-    if (!githubConfig.token || !githubConfig.repo) {
-        showStatus('GitHub-Konfiguration fehlt!', true);
-        return;
-    }
-    
     try {
         // Erst prüfen, ob Datei existiert
         let sha = null;
@@ -154,10 +113,14 @@ async function saveTermineToGitHub() {
     }
 }
 
-// Termine synchronisieren
+// Termine synchronisieren - mit Warnung
 async function syncTermine() {
-    await loadTermineFromGitHub();
+    const confirm = window.confirm("Warnung: Synchronisation lädt die neuesten Termine von GitHub und überschreibt lokale Änderungen. Fortfahren?");
+    if (confirm) {
+        await loadTermineFromGitHub();
+    }
 }
+
 // Neuen Termin hinzufügen
 function addTermin(name, von, bis) {
     const id = Date.now().toString();
@@ -205,9 +168,6 @@ function deleteTermin(termin) {
 
 // Initialisierung
 document.addEventListener('DOMContentLoaded', function() {
-    // GitHub-Konfiguration laden
-    loadGitHubConfig();
-    
     // Kalender initialisieren
     const calendarEl = document.getElementById('calendar');
     calendar = new FullCalendar.Calendar(calendarEl, {
@@ -258,10 +218,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Termine initial laden
-    if (githubConfig.token && githubConfig.repo) {
-        loadTermineFromGitHub();
-    }
+    loadTermineFromGitHub();
     
-    // Automatische Synchronisation alle 30 Sekunden
-    setInterval(syncTermine, 30000);
+    // ENTFERNT: Automatische Synchronisation (war das Problem!)
+    // setInterval(syncTermine, 30000);
 });
