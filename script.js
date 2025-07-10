@@ -1,6 +1,6 @@
 // GitHub-Konfiguration - FEST HINTERLEGT
 let githubConfig = {
-    token: 'IHR_GITHUB_TOKEN_HIER',  // ← Hier Ihren GitHub Token eintragen
+    token: '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',  // ← Hier Ihren GitHub Token eintragen
     repo: 'IHR_BENUTZERNAME/IHR_REPO_NAME',  // ← Hier Ihr Repository eintragen
     branch: 'main',
     filename: 'termine.json'
