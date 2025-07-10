@@ -1,7 +1,7 @@
 // GitHub-Konfiguration - FEST HINTERLEGT
 let githubConfig = {
     token: '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',  // ← Hier Ihren GitHub Token eintragen
-    repo: 'IHR_BENUTZERNAME/IHR_REPO_NAME',  // ← Hier Ihr Repository eintragen
+    repo: 'airandb/Hauberte-Organisation',  // ← Hier Ihr Repository eintragen
     branch: 'main',
     filename: 'termine.json'
 };
@@ -113,11 +113,53 @@ async function saveTermineToGitHub() {
     }
 }
 
-// Termine synchronisieren - mit Warnung
+// Termine synchronisieren - echte bidirektionale Synchronisation
 async function syncTermine() {
-    const confirm = window.confirm("Warnung: Synchronisation lädt die neuesten Termine von GitHub und überschreibt lokale Änderungen. Fortfahren?");
-    if (confirm) {
-        await loadTermineFromGitHub();
+    try {
+        // Erst die Remote-Daten laden
+        const response = await fetch(`https://api.github.com/repos/${githubConfig.repo}/contents/${githubConfig.filename}?ref=${githubConfig.branch}`, {
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const content = atob(data.content);
+            const remoteTermine = JSON.parse(content);
+            
+            // Merge-Logik: Lokale und Remote-Termine zusammenführen
+            const allTermineMap = new Map();
+            
+            // Zuerst alle Remote-Termine hinzufügen
+            remoteTermine.forEach(termin => {
+                allTermineMap.set(termin.id, termin);
+            });
+            
+            // Dann lokale Termine hinzufügen/überschreiben
+            termine.forEach(termin => {
+                allTermineMap.set(termin.id, termin);
+            });
+            
+            // Zurück zu Array konvertieren
+            termine = Array.from(allTermineMap.values());
+            
+            // Aktualisierte Daten zurück auf GitHub speichern
+            await saveTermineToGitHub();
+            
+            updateCalendar();
+            showStatus('Termine erfolgreich synchronisiert!');
+        } else if (response.status === 404) {
+            // Datei existiert nicht - lokale Termine einfach speichern
+            await saveTermineToGitHub();
+            showStatus('Neue Termine-Datei erstellt!');
+        } else {
+            throw new Error(`HTTP ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Fehler beim Synchronisieren:', error);
+        showStatus('Fehler beim Synchronisieren der Termine!', true);
     }
 }
 
