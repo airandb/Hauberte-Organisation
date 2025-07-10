@@ -4,17 +4,6 @@
     <meta charset="UTF-8" />
     <title>Urlaubshaus Verwaltung</title>
     <link rel="stylesheet" href="style.css" />
-    <script>
-        // Einfacher Passwortschutz
-        function checkPassword() {
-            const password = prompt("Bitte Passwort eingeben:");
-            if (password !== "leslousarrivent") {
-                alert("Falsches Passwort! Zugriff verweigert.");
-                document.body.innerHTML = "<h1>Zugriff verweigert</h1>";
-            }
-        }
-        window.onload = checkPassword;
-    </script>
 </head>
 <body>
     <h1>Urlaubsplanung für unser Haus</h1>
@@ -22,10 +11,24 @@
     <div class="help-text">
         <h3>📋 Bedienungshinweise</h3>
         <p>• Neuen Termin eintragen: Formular ausfüllen und "Eintragen" klicken</p>
-        <p>• Termin bearbeiten: Auf den Termin im Kalender klicken → "OK" für Bearbeiten</p>
-        <p>• Termin löschen: Auf den Termin im Kalender klicken → "Abbrechen" für Löschen</p>
-        <p>• Bei Überschneidungen wird automatisch gewarnt</p>
+        <p>• <strong>Alle Termine werden zentral auf GitHub gespeichert!</strong></p>
+        <p>• Automatische Synchronisation alle 30 Sekunden</p>
     </div>
+    
+    <div class="github-config">
+        <h3>⚙️ GitHub-Konfiguration</h3>
+        <div class="config-group">
+            <label for="github-token">GitHub Token:</label>
+            <input type="password" id="github-token" placeholder="Ihr GitHub Token">
+        </div>
+        <div class="config-group">
+            <label for="github-repo">Repository:</label>
+            <input type="text" id="github-repo" placeholder="user/repo" value="meinname/urlaubshaus-termine">
+        </div>
+        <button onclick="saveGitHubConfig()">Konfiguration speichern</button>
+    </div>
+    
+    <div id="status-message"></div>
     
     <h2>Neuen Urlaub eintragen</h2>
     <form id="urlaubForm">
@@ -36,20 +39,28 @@
     </form>
     
     <h2>Kalenderansicht</h2>
+    <button onclick="syncTermine()" class="sync-btn">🔄 Synchronisieren</button>
     <div id="calendar"></div>
     
     <h2>Haus-Infos</h2>
     <div class="haus-infos">
-        <p>Hauberte Codes:</p>
-        <p>Barrière Verte: 1966</p>
-        </p>Cles Portails (Box vor dem Portail du bas): 2611</p>
-        </p>Cles de la Maison (Box au Portail du bas): 2024</p>
-        </p>Cles Citerne/Cave (Box im Poolklo): 2011</p>
+        <p><strong>WLAN:</strong> Passwort1234</p>
+        <p><strong>Hausordnung:</strong> Keine Partys nach 22 Uhr.</p>
     </div>
     
-    <!-- FullCalendar lokal -->
-    <script src="libs/core/index.global.min.js"></script>
-    <script src="libs/daygrid/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
     <script src="script.js"></script>
+    
+    <script>
+        // Passwortschutz
+        function checkPassword() {
+            const password = prompt("Bitte Passwort eingeben:");
+            if (password !== "leslousarrivent") {
+                alert("Falsches Passwort! Zugriff verweigert.");
+                document.body.innerHTML = "<h1>Zugriff verweigert</h1>";
+            }
+        }
+        window.onload = checkPassword;
+    </script>
 </body>
 </html>
