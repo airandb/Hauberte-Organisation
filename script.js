@@ -1,6 +1,6 @@
 // GitHub-Konfiguration - FEST HINTERLEGT
 let githubConfig = {
-    token: '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',  // ← Hier Ihren GitHub Token eintragen
+    token: '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',  // ← Hier Ihren GitHub Token eintragen
     repo: 'airandb/Hauberte-Organisation',  // ← Hier Ihr Repository eintragen
     branch: 'main',
     filename: 'termine.json'
