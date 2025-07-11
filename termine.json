@@ -1,0 +1,17 @@
+[
+  {
+    "titel": "Teammeetings",
+    "datum": "2024-07-15",
+    "beschreibung": "Wöchentliches Team-Meeting um 14:00 Uhr"
+  },
+  {
+    "titel": "Projektpräsentation",
+    "datum": "2024-07-20",
+    "beschreibung": "Präsentation des neuen Projekts für Kunden"
+  },
+  {
+    "titel": "Monatsabschluss",
+    "datum": "2024-07-31",
+    "beschreibung": "Monatsabschluss und Budgetplanung"
+  }
+]
